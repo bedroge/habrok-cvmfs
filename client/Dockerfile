@@ -17,28 +17,26 @@ FROM rockylinux/rockylinux:8
 ARG fqrn
 
 COPY --from=build-fuse-overlayfs /usr/local/bin/fuse-overlayfs /usr/local/bin/fuse-overlayfs
-RUN <<EOF
-dnf install -y epel-release
-dnf install -y 'dnf-command(config-manager)'
-EOF
-RUN dnf config-manager --set-enabled powertools
-RUN dnf install -y https://ecsft.cern.ch/dist/cvmfs/cvmfs-release/cvmfs-release-latest.noarch.rpm
-RUN dnf install -y Lmod
-# install el7 fuse3, as the one for el8 is older and doesn't work with fusemount...
-RUN dnf install -y http://mirror.centos.org/centos/7/os/x86_64/Packages/fuse-2.9.2-11.el7.x86_64.rpm \
+RUN dnf install -y epel-release && \
+    dnf install -y 'dnf-command(config-manager)' && \
+    dnf config-manager --set-enabled powertools && \
+    dnf install -y https://ecsft.cern.ch/dist/cvmfs/cvmfs-release/cvmfs-release-latest.noarch.rpm && \
+    dnf install -y Lmod && \
+    # install el7 fuse3, as the one for el8 is older and doesn't work with fusemount...
+    dnf install -y http://mirror.centos.org/centos/7/os/x86_64/Packages/fuse-2.9.2-11.el7.x86_64.rpm \
                    https://download-ib01.fedoraproject.org/pub/epel/7/x86_64/Packages/f/fuse3-3.6.1-2.el7.x86_64.rpm \
-                   https://download-ib01.fedoraproject.org/pub/epel/7/x86_64/Packages/f/fuse3-libs-3.6.1-2.el7.x86_64.rpm
-RUN dnf install -y cvmfs cvmfs-fuse3
-RUN dnf install -y gcc gcc-c++ gcc-gfortran gdb patch git flex
-RUN dnf install -y python3 python3-setuptools python3-pip python3-cryptography
-RUN pip3 install pep8
-RUN dnf install -y which make libtool automake autoconf file bzip2 gzip p7zip p7zip-plugins
-RUN dnf install -y openssl openssl-devel openssh-clients strace wget curl
-RUN dnf install -y vim-common unzip zip
-# Easybuild GitHub integration
-RUN pip3 install GitPython keyring keyrings.alt
-# Install archspec for CPU detection
-RUN pip3 install archspec
+                   https://download-ib01.fedoraproject.org/pub/epel/7/x86_64/Packages/f/fuse3-libs-3.6.1-2.el7.x86_64.rpm && \
+    dnf install -y cvmfs cvmfs-fuse3 && \
+    dnf install -y gcc gcc-c++ gcc-gfortran gdb patch git flex && \
+    dnf install -y python3 python3-setuptools python3-pip python3-cryptography && \
+    pip3 install pep8 && \
+    dnf install -y which make libtool automake autoconf file bzip2 gzip p7zip p7zip-plugins && \
+    dnf install -y openssl openssl-devel openssh-clients strace wget curl && \
+    dnf install -y vim-common unzip zip && \
+    # Easybuild GitHub integration
+    pip3 install GitPython keyring keyrings.alt && \
+    # Install archspec for CPU detection
+    pip3 install archspec
 
 RUN mkdir -p /cvmfs/${fqrn} && mkdir -p /cvmfs_ro/${fqrn}
 
