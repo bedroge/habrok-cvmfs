@@ -17,8 +17,10 @@ FROM rockylinux/rockylinux:8
 ARG fqrn
 
 COPY --from=build-fuse-overlayfs /usr/local/bin/fuse-overlayfs /usr/local/bin/fuse-overlayfs
-RUN dnf install -y epel-release
-RUN dnf install -y 'dnf-command(config-manager)'
+RUN <<EOF
+dnf install -y epel-release
+dnf install -y 'dnf-command(config-manager)'
+EOF
 RUN dnf config-manager --set-enabled powertools
 RUN dnf install -y https://ecsft.cern.ch/dist/cvmfs/cvmfs-release/cvmfs-release-latest.noarch.rpm
 RUN dnf install -y Lmod
@@ -38,15 +40,14 @@ RUN pip3 install GitPython keyring keyrings.alt
 # Install archspec for CPU detection
 RUN pip3 install archspec
 
-RUN mkdir -p /cvmfs/${fqrn}
-RUN mkdir -p /cvmfs_ro/${fqrn}
+RUN mkdir -p /cvmfs/${fqrn} && mkdir -p /cvmfs_ro/${fqrn}
 
 # CVMFS config. TODO: use wget from git repo? install package? manually copy files?
 #echo 'CVMFS_HTTP_PROXY=DIRECT'
-RUN mkdir /etc/cvmfs/keys/${fqrn#*"."}
-RUN echo "CVMFS_SERVER_URL=http://195.169.22.138/cvmfs/@fqrn@" > /etc/cvmfs/domain.d/${fqrn#*"."}.conf
-RUN echo "CVMFS_KEYS_DIR=/etc/cvmfs/keys/${fqrn#*'.'}" >> /etc/cvmfs/domain.d/${fqrn#*"."}.conf
-RUN echo '-----BEGIN PUBLIC KEY-----\n\
+RUN mkdir /etc/cvmfs/keys/${fqrn#*"."} && \
+    echo "CVMFS_SERVER_URL=http://195.169.22.138/cvmfs/@fqrn@" > /etc/cvmfs/domain.d/${fqrn#*"."}.conf && \
+    echo "CVMFS_KEYS_DIR=/etc/cvmfs/keys/${fqrn#*'.'}" >> /etc/cvmfs/domain.d/${fqrn#*"."}.conf && \
+    echo -e '-----BEGIN PUBLIC KEY-----\n\
 MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA8mfFpbeq0Ppr+o7ltPoI\n\
 Bx+sXAwcpKzi2vCkMoKk/D1I18S2z6jTg5TnS20XMaFJjWcrfEMNoHrIuGjbI9GC\n\
 3ceAKDoCsqXf1qBOckyE0tFbQTLsZJDUFTwPB8LugPmevHx0vtGYDp0s75Nm4sj1\n\
