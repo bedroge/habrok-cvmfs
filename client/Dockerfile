@@ -1,0 +1,59 @@
+# Stick to old version of fuse-overlayfs due to issues with newer versions
+# (cfr. https://github.com/containers/fuse-overlayfs/issues/232)
+ARG fuseoverlayfsversion=0.3
+ARG fqrn=hpc.rug.nl
+
+FROM rockylinux/rockylinux:8 AS build-fuse-overlayfs
+ARG fuseoverlayfsversion
+RUN dnf install -y wget fuse3-devel autoconf automake gcc-c++ make tar
+RUN wget https://github.com/containers/fuse-overlayfs/archive/refs/tags/v${fuseoverlayfsversion}.tar.gz \
+  && tar xzf v${fuseoverlayfsversion}.tar.gz \
+  && cd fuse-overlayfs-${fuseoverlayfsversion} \
+  && ./autogen.sh && ./configure && make && make install
+
+
+FROM rockylinux/rockylinux:8
+ARG fqrn
+
+COPY --from=build-fuse-overlayfs /usr/local/bin/fuse-overlayfs /usr/local/bin/fuse-overlayfs
+RUN dnf install -y epel-release
+RUN dnf install -y 'dnf-command(config-manager)'
+RUN dnf config-manager --set-enabled powertools
+RUN dnf install -y https://ecsft.cern.ch/dist/cvmfs/cvmfs-release/cvmfs-release-latest.noarch.rpm
+RUN dnf install -y Lmod
+# install el7 fuse3, as the one for el8 is older and doesn't work with fusemount...
+RUN dnf install -y http://mirror.centos.org/centos/7/os/x86_64/Packages/fuse-2.9.2-11.el7.x86_64.rpm \
+                   https://download-ib01.fedoraproject.org/pub/epel/7/x86_64/Packages/f/fuse3-3.6.1-2.el7.x86_64.rpm \
+                   https://download-ib01.fedoraproject.org/pub/epel/7/x86_64/Packages/f/fuse3-libs-3.6.1-2.el7.x86_64.rpm
+RUN dnf install -y cvmfs cvmfs-fuse3
+RUN dnf install -y gcc gcc-c++ gcc-gfortran gdb patch git flex
+RUN dnf install -y python3 python3-setuptools python3-pip python3-cryptography
+RUN pip3 install pep8
+RUN dnf install -y which make libtool automake autoconf file bzip2 gzip p7zip p7zip-plugins
+RUN dnf install -y openssl openssl-devel openssh-clients strace wget curl
+RUN dnf install -y vim-common unzip zip
+# Easybuild GitHub integration
+#yum install -y python36-GitPython python36-keyring
+RUN pip3 install GitPython keyring keyrings.alt
+# Install archspec for CPU detection
+RUN pip3 install archspec
+
+RUN mkdir -p /cvmfs/${fqrn}
+RUN mkdir -p /cvmfs_ro/${fqrn}
+
+# CVMFS config. TODO: use wget from git repo? install package? manually copy files?
+#echo 'CVMFS_HTTP_PROXY=DIRECT'
+RUN mkdir /etc/cvmfs/keys/${fqrn#*"."}
+RUN echo "CVMFS_SERVER_URL=http://195.169.22.138/cvmfs/@fqrn@" > /etc/cvmfs/domain.d/${fqrn#*"."}.conf
+RUN echo "CVMFS_KEYS_DIR=/etc/cvmfs/keys/${fqrn#*'.'}" >> /etc/cvmfs/domain.d/${fqrn#*"."}.conf
+RUN echo '-----BEGIN PUBLIC KEY-----\n\
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA8mfFpbeq0Ppr+o7ltPoI\n\
+Bx+sXAwcpKzi2vCkMoKk/D1I18S2z6jTg5TnS20XMaFJjWcrfEMNoHrIuGjbI9GC\n\
+3ceAKDoCsqXf1qBOckyE0tFbQTLsZJDUFTwPB8LugPmevHx0vtGYDp0s75Nm4sj1\n\
+nP6qNLBnC8pUepjYGnYnK++ivJmNtOeOWJ9OJJUtTLNIDgM01UiNDx2NC5kQrqF/\n\
+ZeGpp8uH20ylGMHPdE8V0Mg9cKcXzaM9RxxjfUjYSaN25jpuGxcwVAQZUzTg74oB\n\
+hdZ/3zSyxLHjCnRnenqbnryKr6O2Gy57SIuOWUnmj9gUXIdLdrbyZVPwN/+Mq2ou\n\
+OwIDAQAB\n\
+-----END PUBLIC KEY-----\n' > /etc/cvmfs/keys/${fqrn#*"."}/${fqrn}.pub
+
+#RUN useradd -ms /bin/bash hpc
