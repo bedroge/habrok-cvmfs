@@ -55,5 +55,3 @@ ZeGpp8uH20ylGMHPdE8V0Mg9cKcXzaM9RxxjfUjYSaN25jpuGxcwVAQZUzTg74oB\n\
 hdZ/3zSyxLHjCnRnenqbnryKr6O2Gy57SIuOWUnmj9gUXIdLdrbyZVPwN/+Mq2ou\n\
 OwIDAQAB\n\
 -----END PUBLIC KEY-----\n' > /etc/cvmfs/keys/${fqrn#*"."}/${fqrn}.pub
-
-#RUN useradd -ms /bin/bash hpc
