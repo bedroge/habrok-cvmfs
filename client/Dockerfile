@@ -33,7 +33,6 @@ RUN dnf install -y which make libtool automake autoconf file bzip2 gzip p7zip p7
 RUN dnf install -y openssl openssl-devel openssh-clients strace wget curl
 RUN dnf install -y vim-common unzip zip
 # Easybuild GitHub integration
-#yum install -y python36-GitPython python36-keyring
 RUN pip3 install GitPython keyring keyrings.alt
 # Install archspec for CPU detection
 RUN pip3 install archspec
