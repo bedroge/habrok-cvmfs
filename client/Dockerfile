@@ -31,7 +31,7 @@ RUN dnf install -y https://ecsft.cern.ch/dist/cvmfs/cvmfs-release/cvmfs-release-
     dnf install -y cvmfs cvmfs-fuse3
 # Other tools
 RUN dnf install -y gcc gcc-c++ gcc-gfortran gdb patch git flex && \
-    dnf install -y python3 python3-setuptools python3-pip python3-cryptography && \
+    dnf install -y python3 python3-setuptools python3-pip python3-cryptography python3-pyyaml && \
     dnf install -y which make libtool automake autoconf file bzip2 gzip p7zip p7zip-plugins && \
     dnf install -y openssl openssl-devel openssh-clients strace wget curl && \
     dnf install -y vim-common unzip zip && \
