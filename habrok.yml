@@ -1,0 +1,26 @@
+software:
+#  EasyBuild:
+#    toolchains:
+#      SYSTEM:
+#
+#        versions: [4.4.2]
+#  BLAST+:
+#    toolchains:
+#      gompi-2021a:
+#        versions:
+#          '2.11.0'
+  freetype:
+    toolchains:
+      GCCcore-10.3.0:
+        versions:
+          2.10.4:
+#  matplotlib:
+#    toolchains:
+#      foss-2021a:
+#        versions:
+#          3.4.2
+  GROMACS:
+    toolchains:
+      foss-2021a:
+        versions:
+          '2021.3':
