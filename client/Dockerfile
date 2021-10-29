@@ -37,7 +37,7 @@ RUN dnf install -y gcc gcc-c++ gcc-gfortran gdb patch git flex && \
     dnf install -y vim-common unzip zip && \
     pip3 install pep8
 # Easybuild GitHub integration
-RUN pip3 install GitPython keyring keyrings.alt
+RUN pip3 install GitPython keyring keyrings.alt rich
 # Install archspec for CPU detection
 RUN pip3 install archspec
 
