@@ -51,11 +51,11 @@ RUN mkdir /etc/cvmfs/keys/${fqrn#*"."} && \
     echo "CVMFS_SERVER_URL=http://195.169.22.138/cvmfs/@fqrn@" > /etc/cvmfs/domain.d/${fqrn#*"."}.conf && \
     echo "CVMFS_KEYS_DIR=/etc/cvmfs/keys/${fqrn#*'.'}" >> /etc/cvmfs/domain.d/${fqrn#*"."}.conf && \
     echo -e '-----BEGIN PUBLIC KEY-----\n\
-MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA8mfFpbeq0Ppr+o7ltPoI\n\
-Bx+sXAwcpKzi2vCkMoKk/D1I18S2z6jTg5TnS20XMaFJjWcrfEMNoHrIuGjbI9GC\n\
-3ceAKDoCsqXf1qBOckyE0tFbQTLsZJDUFTwPB8LugPmevHx0vtGYDp0s75Nm4sj1\n\
-nP6qNLBnC8pUepjYGnYnK++ivJmNtOeOWJ9OJJUtTLNIDgM01UiNDx2NC5kQrqF/\n\
-ZeGpp8uH20ylGMHPdE8V0Mg9cKcXzaM9RxxjfUjYSaN25jpuGxcwVAQZUzTg74oB\n\
-hdZ/3zSyxLHjCnRnenqbnryKr6O2Gy57SIuOWUnmj9gUXIdLdrbyZVPwN/+Mq2ou\n\
-OwIDAQAB\n\
------END PUBLIC KEY-----\n' > /etc/cvmfs/keys/${fqrn#*"."}/${fqrn}.pub
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAuoMUe5DnEp59xZ5f++aA\n\
+VALX/N9GcM43uVxVDqm4WYnT0ZdNeW0vmnCGVx1I3jJKVK4304OZOO1ZBYjH7cyD\n\
+RmE/PvMlqSdbPjNQoPJi5owSYG2jO+FRf67xGY0vQf7/hN+dy2FyVZ50X/JQMavw\n\
+yzAiKO0sRxao7yCV/n4RNaLbdY4LEivc8IKAqq5IQgCQTSX8LdOb2MHKkQvOJzQ9\n\
+ZF+YuqdWdcAalDqDEoridDVAaDqqcMqRcRIrXoDU6CR365ebLT6L+LfcLDfIrxVl\n\
+1MhoMZAgI02SB4fIYBXh1xmjdomWuDp23OHJjko+PCj5PGjJQ/SL4ZHcKIkiCmWM\n\
+JQIDAQAB\n\
+-----END PUBLIC KEY-----\n' > /etc/cvmfs/keys/${fqrn#*"."}/${fqrn#*"."}.pub
