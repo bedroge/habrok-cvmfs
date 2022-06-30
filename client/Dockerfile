@@ -6,9 +6,9 @@ ARG fqrn=hpc.rug.nl
 
 FROM rockylinux/rockylinux:8 AS build-fuse-overlayfs
 ARG fuseoverlayfsversion
-RUN dnf install -y wget fuse3-devel autoconf automake gcc-c++ make tar
+RUN dnf install -y wget fuse3-devel autoconf automake gcc-c++ make tar gzip
 RUN wget https://github.com/containers/fuse-overlayfs/archive/refs/tags/v${fuseoverlayfsversion}.tar.gz \
-  && tar xzf fuse-overlayfs-${fuseoverlayfsversion}.tar.gz \
+  && tar xzf v${fuseoverlayfsversion}.tar.gz \
   && cd fuse-overlayfs-${fuseoverlayfsversion} \
   && ./autogen.sh && ./configure && make && make install
 
