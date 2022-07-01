@@ -36,7 +36,7 @@ RUN dnf install -y gcc gcc-c++ gcc-gfortran gdb patch git flex && \
     dnf install -y python39 python39-setuptools python39-pip python39-cryptography python39-pyyaml python39-wheel && \
     dnf install -y which make libtool automake autoconf file bzip2 gzip p7zip p7zip-plugins && \
     dnf install -y openssl openssl-devel openssh-clients strace wget curl && \
-    dnf install -y vim-common unzip zip && \
+    dnf install -y vim-common xz unzip zip && \
     pip3 install pep8
 # Easybuild GitHub integration
 RUN pip3 install GitPython keyring keyrings.alt rich
