@@ -24,8 +24,8 @@ software:
       foss-2021a:
         versions:
           '2021.3':
-  bzip2:
+  attr:
     toolchains:
       GCCcore-10.3.0:
         versions:
-          '1.0.8':
+          '2.5.1':
