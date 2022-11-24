@@ -9,11 +9,6 @@ software:
 #      gompi-2021a:
 #        versions:
 #          '2.11.0'
-  freetype:
-    toolchains:
-      GCCcore-10.3.0:
-        versions:
-          2.10.4:
 #  matplotlib:
 #    toolchains:
 #      foss-2021a:
@@ -21,9 +16,9 @@ software:
 #          3.4.2
   GROMACS:
     toolchains:
-      foss-2021a:
+      foss-2021b:
         versions:
-          '2021.3':
+          '2021.5':
   attr:
     toolchains:
       GCCcore-11.2.0:
