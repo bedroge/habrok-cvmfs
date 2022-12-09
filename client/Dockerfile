@@ -4,15 +4,17 @@ ARG fuseoverlayfsversion=0.3
 ARG fqrn=hpc.rug.nl
 
 
+# Build the specified version of fuse-overlayfs in its own container...
 FROM rockylinux/rockylinux:8 AS build-fuse-overlayfs
 ARG fuseoverlayfsversion
-RUN dnf install -y wget fuse3-devel autoconf automake gcc-c++ make tar
+RUN dnf install -y wget fuse3-devel autoconf automake gcc-c++ make tar gzip
 RUN wget https://github.com/containers/fuse-overlayfs/archive/refs/tags/v${fuseoverlayfsversion}.tar.gz \
   && tar xzf v${fuseoverlayfsversion}.tar.gz \
   && cd fuse-overlayfs-${fuseoverlayfsversion} \
   && ./autogen.sh && ./configure && make && make install
 
 
+# and now build the real container.
 FROM rockylinux/rockylinux:8
 ARG fqrn
 
@@ -29,17 +31,24 @@ RUN dnf install -y https://ecsft.cern.ch/dist/cvmfs/cvmfs-release/cvmfs-release-
                    https://download-ib01.fedoraproject.org/pub/epel/7/x86_64/Packages/f/fuse3-3.6.1-2.el7.x86_64.rpm \
                    https://download-ib01.fedoraproject.org/pub/epel/7/x86_64/Packages/f/fuse3-libs-3.6.1-2.el7.x86_64.rpm && \
     dnf install -y cvmfs cvmfs-fuse3
+# Interconnect libraries
+RUN dnf install -y rdma-core rdma-core-devel
 # Other tools
 RUN dnf install -y gcc gcc-c++ gcc-gfortran gdb patch git flex && \
-    dnf install -y python3 python3-setuptools python3-pip python3-cryptography python3-pyyaml && \
-    dnf install -y which make libtool automake autoconf file bzip2 gzip p7zip p7zip-plugins && \
+    dnf install -y python39 python39-setuptools python39-pip python39-cryptography python39-pyyaml python39-wheel && \
+    dnf install -y glibc-gconv-extra which make libtool automake autoconf file bzip2 gzip p7zip p7zip-plugins && \
     dnf install -y openssl openssl-devel openssh-clients strace wget curl && \
-    dnf install -y vim-common unzip zip && \
-    pip3 install pep8
+    dnf install -y vim-common xz unzip zip && \
+    pip3 install pycodestyle
 # Easybuild GitHub integration
-RUN pip3 install GitPython keyring keyrings.alt
+RUN pip3 install GitPython keyring keyrings.alt rich
 # Install archspec for CPU detection
 RUN pip3 install archspec
+# Install EESSI's archdetect for CPU detection
+RUN wget -O /usr/local/bin/eessi_archdetect.sh https://raw.githubusercontent.com/EESSI/software-layer/main/init/eessi_archdetect.sh && \
+    chmod +x /usr/local/bin/eessi_archdetect.sh && \
+    mkdir /usr/local/bin/arch_specs && \
+    wget -O /usr/local/bin/arch_specs/eessi_arch_x86.spec https://raw.githubusercontent.com/EESSI/software-layer/main/init/arch_specs/eessi_arch_x86.spec
 
 RUN mkdir -p /cvmfs/${fqrn} && mkdir -p /cvmfs_ro/${fqrn}
 
@@ -49,11 +58,11 @@ RUN mkdir /etc/cvmfs/keys/${fqrn#*"."} && \
     echo "CVMFS_SERVER_URL=http://195.169.22.138/cvmfs/@fqrn@" > /etc/cvmfs/domain.d/${fqrn#*"."}.conf && \
     echo "CVMFS_KEYS_DIR=/etc/cvmfs/keys/${fqrn#*'.'}" >> /etc/cvmfs/domain.d/${fqrn#*"."}.conf && \
     echo -e '-----BEGIN PUBLIC KEY-----\n\
-MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA8mfFpbeq0Ppr+o7ltPoI\n\
-Bx+sXAwcpKzi2vCkMoKk/D1I18S2z6jTg5TnS20XMaFJjWcrfEMNoHrIuGjbI9GC\n\
-3ceAKDoCsqXf1qBOckyE0tFbQTLsZJDUFTwPB8LugPmevHx0vtGYDp0s75Nm4sj1\n\
-nP6qNLBnC8pUepjYGnYnK++ivJmNtOeOWJ9OJJUtTLNIDgM01UiNDx2NC5kQrqF/\n\
-ZeGpp8uH20ylGMHPdE8V0Mg9cKcXzaM9RxxjfUjYSaN25jpuGxcwVAQZUzTg74oB\n\
-hdZ/3zSyxLHjCnRnenqbnryKr6O2Gy57SIuOWUnmj9gUXIdLdrbyZVPwN/+Mq2ou\n\
-OwIDAQAB\n\
------END PUBLIC KEY-----\n' > /etc/cvmfs/keys/${fqrn#*"."}/${fqrn}.pub
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAuoMUe5DnEp59xZ5f++aA\n\
+VALX/N9GcM43uVxVDqm4WYnT0ZdNeW0vmnCGVx1I3jJKVK4304OZOO1ZBYjH7cyD\n\
+RmE/PvMlqSdbPjNQoPJi5owSYG2jO+FRf67xGY0vQf7/hN+dy2FyVZ50X/JQMavw\n\
+yzAiKO0sRxao7yCV/n4RNaLbdY4LEivc8IKAqq5IQgCQTSX8LdOb2MHKkQvOJzQ9\n\
+ZF+YuqdWdcAalDqDEoridDVAaDqqcMqRcRIrXoDU6CR365ebLT6L+LfcLDfIrxVl\n\
+1MhoMZAgI02SB4fIYBXh1xmjdomWuDp23OHJjko+PCj5PGjJQ/SL4ZHcKIkiCmWM\n\
+JQIDAQAB\n\
+-----END PUBLIC KEY-----\n' > /etc/cvmfs/keys/${fqrn#*"."}/${fqrn#*"."}.pub
