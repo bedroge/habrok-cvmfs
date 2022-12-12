@@ -54,15 +54,6 @@ RUN mkdir -p /cvmfs/${fqrn} && mkdir -p /cvmfs_ro/${fqrn}
 
 # CVMFS config. TODO: use wget from git repo? install package? manually copy files?
 #echo 'CVMFS_HTTP_PROXY=DIRECT'
-RUN mkdir /etc/cvmfs/keys/${fqrn#*"."} && \
-    echo "CVMFS_SERVER_URL=http://195.169.22.138/cvmfs/@fqrn@" > /etc/cvmfs/domain.d/${fqrn#*"."}.conf && \
-    echo "CVMFS_KEYS_DIR=/etc/cvmfs/keys/${fqrn#*'.'}" >> /etc/cvmfs/domain.d/${fqrn#*"."}.conf && \
-    echo -e '-----BEGIN PUBLIC KEY-----\n\
-MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAuoMUe5DnEp59xZ5f++aA\n\
-VALX/N9GcM43uVxVDqm4WYnT0ZdNeW0vmnCGVx1I3jJKVK4304OZOO1ZBYjH7cyD\n\
-RmE/PvMlqSdbPjNQoPJi5owSYG2jO+FRf67xGY0vQf7/hN+dy2FyVZ50X/JQMavw\n\
-yzAiKO0sRxao7yCV/n4RNaLbdY4LEivc8IKAqq5IQgCQTSX8LdOb2MHKkQvOJzQ9\n\
-ZF+YuqdWdcAalDqDEoridDVAaDqqcMqRcRIrXoDU6CR365ebLT6L+LfcLDfIrxVl\n\
-1MhoMZAgI02SB4fIYBXh1xmjdomWuDp23OHJjko+PCj5PGjJQ/SL4ZHcKIkiCmWM\n\
-JQIDAQAB\n\
------END PUBLIC KEY-----\n' > /etc/cvmfs/keys/${fqrn#*"."}/${fqrn#*"."}.pub
+RUN mkdir /etc/cvmfs/keys/${fqrn#*"."}
+COPY rug.nl.pub /etc/cvmfs/keys/${fqrn#*"."}/
+COPY rug.nl.conf /etc/cvmfs/domain.d/
