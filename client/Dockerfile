@@ -52,6 +52,6 @@ RUN mkdir -p /cvmfs/hpc.rug.nl && mkdir -p /cvmfs_ro/hpc.rug.nl
 
 # CVMFS config. TODO: use wget from git repo? install package? manually copy files?
 #echo 'CVMFS_HTTP_PROXY=DIRECT'
-RUN mkdir /etc/cvmfs/keys/rug.nl && mkdir /etc/cvmfs/domain.d/
+RUN mkdir /etc/cvmfs/keys/rug.nl
 COPY client/rug.nl.pub /etc/cvmfs/keys/rug.nl/
 COPY client/rug.nl.conf /etc/cvmfs/domain.d/
