@@ -1,7 +1,6 @@
 # Stick to old version of fuse-overlayfs due to issues with newer versions
 # (cfr. https://github.com/containers/fuse-overlayfs/issues/232)
 ARG fuseoverlayfsversion=0.3
-ARG fqrn=hpc.rug.nl
 
 
 # Build the specified version of fuse-overlayfs in its own container...
@@ -16,7 +15,6 @@ RUN wget https://github.com/containers/fuse-overlayfs/archive/refs/tags/v${fuseo
 
 # and now build the real container.
 FROM rockylinux/rockylinux:8
-ARG fqrn
 
 COPY --from=build-fuse-overlayfs /usr/local/bin/fuse-overlayfs /usr/local/bin/fuse-overlayfs
 # Configure the repositories
@@ -50,10 +48,10 @@ RUN wget -O /usr/local/bin/eessi_archdetect.sh https://raw.githubusercontent.com
     mkdir /usr/local/bin/arch_specs && \
     wget -O /usr/local/bin/arch_specs/eessi_arch_x86.spec https://raw.githubusercontent.com/EESSI/software-layer/main/init/arch_specs/eessi_arch_x86.spec
 
-RUN mkdir -p /cvmfs/${fqrn} && mkdir -p /cvmfs_ro/${fqrn}
+RUN mkdir -p /cvmfs/hpc.rug.nl && mkdir -p /cvmfs_ro/hpc.rug.nl
 
 # CVMFS config. TODO: use wget from git repo? install package? manually copy files?
 #echo 'CVMFS_HTTP_PROXY=DIRECT'
-RUN mkdir /etc/cvmfs/keys/${fqrn#*"."}
-COPY rug.nl.pub /etc/cvmfs/keys/${fqrn#*"."}/
+RUN mkdir /etc/cvmfs/keys/rug.nl
+COPY rug.nl.pub /etc/cvmfs/keys/rugl.nl/
 COPY rug.nl.conf /etc/cvmfs/domain.d/
