@@ -55,3 +55,4 @@ RUN mkdir -p /cvmfs/hpc.rug.nl && mkdir -p /cvmfs_ro/hpc.rug.nl
 RUN mkdir /etc/cvmfs/keys/rug.nl
 COPY client/rug.nl.pub /etc/cvmfs/keys/rug.nl/
 COPY client/rug.nl.conf /etc/cvmfs/domain.d/
+
