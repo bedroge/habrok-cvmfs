@@ -1,10 +1,10 @@
 #!/bin/bash
 
-CONTAINER=docker://ghcr.io/bedroge/build-node
+CONTAINER=docker://ghcr.io/rug-cit-hpc/build-node
 REPO=hpc.rug.nl
 OS=rocky8
-#EB_CONFIG_FILE=$(dirname $(realpath $0))/eb_configuration
-EB_CONFIG_FILE=config/eb_configuration_habrok
+VERSION=2023.01
+EB_CONFIG_FILE=$(dirname $(realpath $0))/../../config/eb_configuration_habrok
 
 function show_help() {
   echo "
@@ -17,6 +17,7 @@ Usage: $0 [OPTION]... <COMMAND>
   -n, --name <FILENAME>                  name of the resulting tarball
   -o, --output <DIRECTORY>               output directory for storing the produced tarball, no tarball is created when not set
   -t, --tmpdir <DIRECTORY>               temporary directory to be used for CVMFS, fuse-overlayfs, and EasyBuild
+  -v, --version <VERSION>                version number of the stack to build software for
 "
 }
 
@@ -33,8 +34,8 @@ function cleanup() {
 # Parse command-line options
 
 # Option strings
-SHORT=h?k?a:b:n:o:t:
-LONG=help,keep,arch:bind:name:output:tmpdir:
+SHORT=h?k?a:b:n:o:t:v:
+LONG=help,keep,arch:bind:name:output:tmpdir:version:
 
 # read the options
 OPTS=$(getopt --options $SHORT --long $LONG --name "$0" -- "$@")
@@ -74,6 +75,10 @@ while true ; do
       TMPDIR="$2"
       shift 2
       ;;
+    -v | --version )
+      VERSION="$2"
+      shift 2
+      ;;
     -- )
       shift
       break
@@ -92,7 +97,6 @@ do
     SINGBIND="$SINGBIND -B ${dir}"
 done
 
-#ARCH=${ARCH:-$(uname -m)/$(archspec cpu)}
 if [ -z "${TMPDIR}" ]
 then
   echo 'No temporary directory specified with $TMPDIR nor -t, so using /tmp as base temporary directory.'
@@ -116,8 +120,7 @@ then
   #ARCH=$(uname -m)/$(singularity exec ${CONTAINER} archspec cpu)
   # Use EESSI's archdetect script to determine the architecture name of this host.
   ARCH=$(singularity exec ${CONTAINER} eessi_archdetect.sh cpupath)
-  #ARCH=x86_64/zen2
-  #export EASYBUILD_OPTARCH="march=x86-64-v3"
+  #ARCH=x86_64/amd/zen2
 elif [ -z "${ARCH##*'/'generic}" ]
 then
   echo "Configuring EasyBuild for generic builds..."
@@ -130,7 +133,7 @@ then
 else
   # Architecture was specified correctly.
   # For cross-building: the Easybuild setting should only contain the last part,
-  # e.g. "march=haswell" when "x86_64/haswell" was specified.
+  # e.g. "march=haswell" when "x86_64/intel/haswell" was specified.
   # But we currently disable cross-building, as it's usually quite dangerous.
   echo 'WARNING: custom architecture specified, but do note that this only affects the installation path (i.e. no cross-compiling)!'
   #export EASYBUILD_OPTARCH="march=${ARCH#*/*/}"
@@ -146,15 +149,15 @@ mkdir -p ${MYTMPDIR}/pycache
 export PYTHONPYCACHEPREFIX=${MYTMPDIR}/pycache
 
 CVMFS_LOCAL_DEFAULTS=${MYTMPDIR}/cvmfs/default.local
-echo "ARCH=${ARCH}" > $CVMFS_LOCAL_DEFAULTS
-# Use host's proxy if it has one?
-#if [ -f /etc/cvmfs/default.local ];
-#then
-#  cat /etc/cvmfs/default.local | grep -v "^ARCH=" >> $CVMFS_LOCAL_DEFAULTS
-#  grep "CVMFS_HTTP_PROXY=" /etc/cvmfs/default.local >> $CVMFS_LOCAL_DEFAULTS
-#else
+echo "SW_STACK_ARCH=${ARCH}" > $CVMFS_LOCAL_DEFAULTS
+echo "SW_STACK_OS=${OS}" >> $CVMFS_LOCAL_DEFAULTS
+# Use host's proxy if it has one
+if [ -f "/etc/cvmfs/default.local" ] && grep -q "^CVMFS_HTTP_PROXY=" /etc/cvmfs/default.local;
+then
+  grep "^CVMFS_HTTP_PROXY=" /etc/cvmfs/default.local >> ${CVMFS_LOCAL_DEFAULTS}
+else
   echo 'CVMFS_HTTP_PROXY=DIRECT' >> ${CVMFS_LOCAL_DEFAULTS}
-#fi
+fi
 
 # Configure EasyBuild
 if [ ! -f "${EB_CONFIG_FILE}" ]
@@ -172,7 +175,7 @@ cat << EOF > $TMPSCRIPT
 #cd $HOME
 # Source global definitions
 [ -f /etc/bashrc ] && . /etc/bashrc
-module use /cvmfs/${REPO}/${OS}/${ARCH}/modules/all
+module use /cvmfs/${REPO}/versions/${VERSION}/${OS}/${ARCH}/modules/all
 module purge
 
 if ! module is-avail EasyBuild
@@ -236,34 +239,43 @@ fi
 if [ ! -z "${OUTDIR}" ]
 then
   OLDPWD=$PWD
-  UPPERARCHDIR=${MYTMPDIR}/overlay/upper/${ARCH%/*}
-  CPUARCH=${ARCH#*/}
-  if [ -d ${UPPERARCHDIR} ] && [ "$(ls -A ${UPPERARCHDIR})" ]
+  TOPDIR=${MYTMPDIR}/overlay/upper/versions
+  ARCHDIR=${VERSION}/${OS}/${ARCH}
+  #ARCHDIR=versions/${VERSION}/${OS}/${ARCH%/*}
+  #CPUARCH=${ARCH#*/}
+  if [ -d "${TOPDIR}/${ARCHDIR}" ] && [ "$(ls -A ${TOPDIR}/${ARCHDIR})" ]
   then
-    TARBALL=${OUTDIR}/${TARBALL:-${ARCH#*/}-$(date +%s).tar.gz}
+    # Default tarball name: <version>-<architecture (/ replaced by -)>-<unix timestamp>.tar.gz
+    TARBALL=${OUTDIR}/${TARBALL:-${VERSION}-${ARCH//\//-}-$(date +%s).tar.gz}
     FILES_LIST=${MYTMPDIR}/files.list.txt
-    cd ${UPPERARCHDIR}
+    cd ${TOPDIR}
 
-    if [ -d ${CPUARCH}/.lmod ]; then
+    # don't build the lmod cache here, due to race conditions when doing simultaneous builds
+    # if [ -d ${CPUARCH}/.lmod ]; then
       # include Lmod cache and configuration file (lmodrc.lua),
       # skip whiteout files and backup copies of Lmod cache (spiderT.old.*)
-      find ${CPUARCH}/.lmod -type f | egrep -v '/\.wh\.|spiderT.old' > ${FILES_LIST}
-    fi
-    if [ -d ${CPUARCH}/modules ]; then
+      # find ${CPUARCH}/.lmod -type f | egrep -v '/\.wh\.|spiderT.old' > ${FILES_LIST}
+    # fi
+    if [ -d ${ARCHDIR}/modules ]; then
       # module files
-      find ${CPUARCH}/modules -type f >> ${FILES_LIST}
+      find ${ARCHDIR}/modules -type f >> ${FILES_LIST}
       # module symlinks
-      find ${CPUARCH}/modules -type l >> ${FILES_LIST}
+      find ${ARCHDIR}/modules -type l >> ${FILES_LIST}
     fi
-    if [ -d ${CPUARCH}/software ]; then
+    if [ -d ${ARCHDIR}/software ]; then
       # installation directories
-      ls -d ${CPUARCH}/software/*/* >> ${FILES_LIST}
+      ls -d ${ARCHDIR}/software/*/* >> ${FILES_LIST}
     fi
 
-    echo "Creating tarball ${TARBALL} from ${UPPERARCHDIR}..."
-    cd $OLDPWD
-    tar -C ${UPPERARCHDIR} -czf ${TARBALL} --files-from=${FILES_LIST} --exclude=*.wh.*
-    echo "${TARBALL} created!"
+    # create the tarball if new files were created
+    if [ ! -s "${FILES_LIST}" ]; then
+      echo "File list for tarball is empty, not creating a tarball."
+    else
+      echo "Creating tarball ${TARBALL} from ${TOPDIR}..."
+      cd $OLDPWD
+      tar -C ${TOPDIR} -czf ${TARBALL} --files-from=${FILES_LIST} --exclude=*.wh.*
+      echo "${TARBALL} created!"
+    fi
   else
     echo "Looks like no software has been installed, so not creating a tarball."
   fi
