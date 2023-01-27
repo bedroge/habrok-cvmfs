@@ -55,4 +55,5 @@ RUN mkdir /etc/cvmfs/keys/rug.nl
 COPY containers/docker/rocky8/rug.nl.pub /etc/cvmfs/keys/rug.nl/
 COPY containers/docker/rocky8/rug.nl.conf /etc/cvmfs/domain.d/
 
+# Fix cuda issue
 RUN chown root /var /var/log
