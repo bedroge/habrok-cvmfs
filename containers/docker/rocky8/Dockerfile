@@ -54,3 +54,5 @@ RUN mkdir -p /cvmfs/hpc.rug.nl && mkdir -p /cvmfs_ro/hpc.rug.nl
 RUN mkdir /etc/cvmfs/keys/rug.nl
 COPY containers/docker/rocky8/rug.nl.pub /etc/cvmfs/keys/rug.nl/
 COPY containers/docker/rocky8/rug.nl.conf /etc/cvmfs/domain.d/
+
+RUN chown root /var /var/log
