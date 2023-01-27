@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - master
+      - habrok
     paths:
       - containers/docker/rocky8/Dockerfile
   pull_request:
